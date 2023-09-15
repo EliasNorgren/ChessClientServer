@@ -34,21 +34,25 @@ async def receive_messages():
 
 
 def buttonClick():
-    global ws
+    global ws, input
     if ws:
-        asyncio.get_event_loop().run_until_complete(ws.send("move e2e4"))
+        asyncio.get_event_loop().run_until_complete(ws.send(input.get()))
 
 
 # Create a thread for WebSocket communication
 websocket_thread = threading.Thread(
     target=lambda: asyncio.run(receive_messages()))
 
+input = None
+
 if __name__ == "__main__":
 
-    signal.signal(signal.SIGINT, handler)
+    # signal.signal(signal.SIGINT, handler)
 
     # Start the WebSocket thread
     websocket_thread.start()
+
+    # asyncio.get_event_loop().run_until_complete(receive_messages())
 
     # Create the main application window
     root = tk.Tk()
@@ -56,6 +60,8 @@ if __name__ == "__main__":
 
     # Create a button and associate it with the buttonClick function
     button = tk.Button(root, text="Send Message", command=buttonClick)
+    input = tk.Entry(root)
+    input.pack()
     button.pack()
 
     # Start the Tkinter main event loop

@@ -5,11 +5,12 @@ from websockets.server import serve
 
 
 class server:
-    def __init__(self, engine: chessEngine, port: int) -> None:
+    def __init__(self, port: int) -> None:
         print("Running server!")
         self.roomNumberToWebsocketTable = {}
         self.websocketToRoomnumberTable = {}
-        self.engine = engine
+        self.roomNumberToChessEngine = {}
+        self.whiteForRoom = {}
         start_server = websockets.serve(
             self.handle_client_connection, "localhost", port)
         asyncio.get_event_loop().run_until_complete(start_server)
@@ -29,10 +30,16 @@ class server:
             newList.append(websocket)
             self.websocketToRoomnumberTable[websocket] = roomNumber
             self.roomNumberToWebsocketTable[roomNumber] = newList
+            self.whiteForRoom[roomNumber] = websocket
+            await websocket.send(f"Created room {roomNumber}")
+
         else:
             self.roomNumberToWebsocketTable[roomNumber].append(websocket)
             self.websocketToRoomnumberTable[websocket] = roomNumber
-        await websocket.send(f"Created room {roomNumber}")
+            await websocket.send(f"Successfully joined room {roomNumber}")
+
+            engineForRoom = chessEngine()
+            self.roomNumberToChessEngine[roomNumber] = engineForRoom
 
         # -------------------------------------
 
@@ -40,13 +47,42 @@ class server:
             while True:
                 message = await websocket.recv()
                 roomNumber = self.websocketToRoomnumberTable[websocket]
-                print(f"Incomming message in room {roomNumber}:" + message)
+                print(f"Incomming message in room {roomNumber} :" + message)
                 message = message.split(" ")
 
-                if message[0] == "move" and self.engine.moveIsLegal(message[1]):
-                    self.engine.performMove(message[1])
-                    await self.roomNumberToWebsocketTable[roomNumber][0].send(f"done {message[1]}")
-                    await self.roomNumberToWebsocketTable[roomNumber][1].send(f"done {message[1]}")
+                if message[0] == "move":
+                    eng: chessEngine = self.roomNumberToChessEngine[roomNumber]
+
+                    playerIsWhite = self.whiteForRoom[roomNumber] == websocket
+                    if (playerIsWhite and not eng.whitesTurn()) or (not playerIsWhite and eng.whitesTurn()):
+                        await websocket.send("Not your turn")
+                        continue
+
+                    if not eng.moveIsLegal(message[1]):
+                        await websocket.send("Illegal move")
+                        continue
+
+                    eng.performMove(message[1])
+
+                    if eng.gameIsCheckMate():
+                        won = ""
+                        if eng.whitesTurn():
+                            won = "white"
+                        else:
+                            won = "black"
+                        result = f"Game is checkmate {won} won!"
+                        await self.roomNumberToWebsocketTable[roomNumber][0].send(result)
+                        await self.roomNumberToWebsocketTable[roomNumber][1].send(result)
+                        continue
+                        # Continue??
+
+                    fen = eng.getFen()
+
+                    print(f"Sending new board after move {message[0]}")
+                    await self.roomNumberToWebsocketTable[roomNumber][0].send(fen)
+                    await self.roomNumberToWebsocketTable[roomNumber][1].send(fen)
+                else:
+                    await websocket.send("Unknown command")
 
         except websockets.exceptions.ConnectionClosedOK:
             print("Connection closed gracefully by the client")
