@@ -22,12 +22,19 @@ class ServerAPI:
                 print("Room was full")
                 await websocket.close()
                 return
+            if "created room" in status:
+                self.playingAsWhite = True
+            if "joined room" in status:
+                self.playingAsWhite = False
             try:
                 while True:
                     message = await websocket.recv()
+                    print(f"Received: {message}")
+
                     if "checkmate" in message:
                         await websocket.close()
-                    print(f"Received: {message}")
+                    if "fen" in message:
+                        self.handleReceivedFEN(message.split(" ")[1])
             except websockets.exceptions.ConnectionClosedOK:
                 print("Connection closed gracefully by the server")
 
