@@ -55,6 +55,11 @@ class server:
                 message = message.split(" ")
 
                 if message[0] == "move":
+
+                    if len(self.websocketToRoomnumberTable[websocket]) < 2:
+                        await websocket.send("game not started")
+                        continue
+
                     eng: chessEngine = self.roomNumberToChessEngine[roomNumber]
 
                     playerIsWhite = self.whiteForRoom[roomNumber] == websocket
@@ -71,8 +76,8 @@ class server:
                     fen = eng.getFen()
 
                     print(f"Sending new board after move {message[1]}")
-                    await self.roomNumberToWebsocketTable[roomNumber][0].send(fen)
-                    await self.roomNumberToWebsocketTable[roomNumber][1].send(fen)
+                    await self.roomNumberToWebsocketTable[roomNumber][0].send("fen " + fen)
+                    await self.roomNumberToWebsocketTable[roomNumber][1].send("fen " + fen)
 
                     if eng.gameIsCheckMate():
 
