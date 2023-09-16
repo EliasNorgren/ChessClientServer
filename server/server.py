@@ -31,15 +31,19 @@ class server:
             self.websocketToRoomnumberTable[websocket] = roomNumber
             self.roomNumberToWebsocketTable[roomNumber] = newList
             self.whiteForRoom[roomNumber] = websocket
+            print(f"Room {roomNumber} created.")
             await websocket.send(f"Created room {roomNumber}")
 
-        else:
+        elif len(self.roomNumberToWebsocketTable[roomNumber]) == 1:
             self.roomNumberToWebsocketTable[roomNumber].append(websocket)
             self.websocketToRoomnumberTable[websocket] = roomNumber
             await websocket.send(f"Successfully joined room {roomNumber}")
 
             engineForRoom = chessEngine()
             self.roomNumberToChessEngine[roomNumber] = engineForRoom
+        else:
+            print("Cant join, full.")
+            await websocket.send("Room full")
 
         # -------------------------------------
 
@@ -64,7 +68,14 @@ class server:
 
                     eng.performMove(message[1])
 
+                    fen = eng.getFen()
+
+                    print(f"Sending new board after move {message[1]}")
+                    await self.roomNumberToWebsocketTable[roomNumber][0].send(fen)
+                    await self.roomNumberToWebsocketTable[roomNumber][1].send(fen)
+
                     if eng.gameIsCheckMate():
+
                         won = ""
                         if eng.whitesTurn():
                             won = "white"
@@ -73,14 +84,16 @@ class server:
                         result = f"Game is checkmate {won} won!"
                         await self.roomNumberToWebsocketTable[roomNumber][0].send(result)
                         await self.roomNumberToWebsocketTable[roomNumber][1].send(result)
-                        continue
-                        # Continue??
 
-                    fen = eng.getFen()
+                        ws1 = self.roomNumberToWebsocketTable[roomNumber][0]
+                        ws2 = self.roomNumberToWebsocketTable[roomNumber][1]
+                        del (self.websocketToRoomnumberTable[ws1])
+                        del (self.websocketToRoomnumberTable[ws2])
 
-                    print(f"Sending new board after move {message[0]}")
-                    await self.roomNumberToWebsocketTable[roomNumber][0].send(fen)
-                    await self.roomNumberToWebsocketTable[roomNumber][1].send(fen)
+                        del (self.roomNumberToChessEngine[roomNumber])
+                        del (self.whiteForRoom[roomNumber])
+                        del (self.roomNumberToWebsocketTable[roomNumber])
+
                 else:
                     await websocket.send("Unknown command")
 
