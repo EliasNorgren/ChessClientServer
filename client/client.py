@@ -14,6 +14,7 @@ class Client:
 
         self.gui = ChessGUI(renderAsWhite=white)
         self.gui.sendToServer = self.sendToServer
+
         self.gui.startGUI()
 
     def sendToServer(self, message):

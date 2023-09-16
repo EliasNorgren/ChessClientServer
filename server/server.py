@@ -106,4 +106,15 @@ class server:
             print("Connection closed gracefully by the client")
         finally:
             print("Closing connection")
-            # self.clients.remove(websocket)
+            try:
+                ws1 = self.roomNumberToWebsocketTable[roomNumber][0]
+                ws2 = self.roomNumberToWebsocketTable[roomNumber][1]
+                del (self.websocketToRoomnumberTable[ws1])
+                del (self.websocketToRoomnumberTable[ws2])
+
+                del (self.roomNumberToChessEngine[roomNumber])
+                del (self.whiteForRoom[roomNumber])
+                del (self.roomNumberToWebsocketTable[roomNumber])
+            except KeyError:
+                pass
+                # self.clients.remove(websocket)

@@ -150,5 +150,26 @@ class ChessGUI:
             file = chr(104-x)
         return file + str(rank)
 
+    def renderPieceIndependentOfBoardRotation(self, piece, x, y):
+        if self.renderAsWhite:
+            self.renderPieceAtPosition(self.piece_images[piece], y, x)
+        else:
+            self.renderPieceAtPosition(
+                self.piece_images[piece], 7-int(y), 7-int(x))
+
     def renderFEN(self, fen):
         print("HANDLING: " + fen)
+
+        self.chessboard_canvas.delete("pieces")
+        fenRows = fen.split("/")
+        rowIndex = 0
+        for row in fenRows:
+            colIndex = 0
+            for col in row:
+                if col.isdigit():
+                    colIndex += int(col)
+                else:
+                    self.renderPieceIndependentOfBoardRotation(
+                        col, colIndex, rowIndex)
+                    colIndex += 1
+            rowIndex += 1
