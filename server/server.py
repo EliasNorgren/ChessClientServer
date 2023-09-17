@@ -25,22 +25,30 @@ class server:
         message = await websocket.recv()
         # Send ack of room created
         roomNumber = message.split(" ")[2]
+        playingAs = message.split(" ")[3]
+        print(f"Pre setup message:{message}")
+        print(f"roomNr={roomNumber}, playingAs={playingAs}")
         if roomNumber not in self.roomNumberToWebsocketTable:
             newList = []
             newList.append(websocket)
             self.websocketToRoomnumberTable[websocket] = roomNumber
             self.roomNumberToWebsocketTable[roomNumber] = newList
-            self.whiteForRoom[roomNumber] = websocket
+            if playingAs == "white":
+                self.whiteForRoom[roomNumber] = websocket
+
             print(f"Room {roomNumber} created.")
             await websocket.send(f"Created room {roomNumber}")
 
         elif len(self.roomNumberToWebsocketTable[roomNumber]) == 1:
+            if playingAs == "white":
+                self.whiteForRoom[roomNumber] = websocket
             self.roomNumberToWebsocketTable[roomNumber].append(websocket)
             self.websocketToRoomnumberTable[websocket] = roomNumber
-            await websocket.send(f"Successfully joined room {roomNumber}")
 
             engineForRoom = chessEngine()
             self.roomNumberToChessEngine[roomNumber] = engineForRoom
+            await websocket.send(f"Successfully joined room {roomNumber}")
+
         else:
             print("Cant join, full.")
             await websocket.send("Room full")
@@ -61,8 +69,8 @@ class server:
                         continue
 
                     eng: chessEngine = self.roomNumberToChessEngine[roomNumber]
-
                     playerIsWhite = self.whiteForRoom[roomNumber] == websocket
+                    print(f"PlayerIsWhite: {playerIsWhite}")
                     if (playerIsWhite and not eng.whitesTurn()) or (not playerIsWhite and eng.whitesTurn()):
                         await websocket.send("Not your turn")
                         continue

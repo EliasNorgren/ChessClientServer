@@ -9,15 +9,15 @@ class ChessGUI:
     CHESSBOARD_HEIGHT = 8
     SQUARE_SIZE = 60  # Size of each square in pixels (adjust as needed)
 
-    def __init__(self, renderAsWhite) -> None:
+    def startChessGUI(self, root, renderAsWhite):
+        # Create the main application window
         self.renderAsWhite = renderAsWhite
 
-    def startGUI(self):
-        # Create the main application window
-        self.root = tk.Tk()
-        self.root.title("Chess Client")
+        # self.root = tk.Tk()
+        window = tk.Toplevel(root)
+        window.title("Chess Client")
         self.selectedTile = None
-        self.chessboard_canvas = tk.Canvas(self.root, width=self.SQUARE_SIZE *
+        self.chessboard_canvas = tk.Canvas(window, width=self.SQUARE_SIZE *
                                            self.CHESSBOARD_WIDTH, height=self.SQUARE_SIZE * self.CHESSBOARD_HEIGHT)
         self.chessboard_canvas.bind("<Button-1>", self.canvasClick)
 
@@ -30,14 +30,14 @@ class ChessGUI:
         self.loadImages()
         self.initBoard()
 
-        self.root.mainloop()
+        # self.root.mainloop()
 
     def canvasClick(self, event):
-        print(f"Click: x:{event.x} y:{event.y}")
+        # print(f"Click: x:{event.x} y:{event.y}")
         x, y = self.getCanvasCordsFromClick(event.x, event.y)
-        print(f"Canvas coord x:{x} y:{y}")
+        # print(f"Canvas coord x:{x} y:{y}")
         chessCord = self.getChessPosFromCanvasPos(x, y)
-        print(f"Chess coord {chessCord}")
+        # print(f"Chess coord {chessCord}")
         if not self.selectedTile:
             self.selectedTile = chessCord
             self.chessboard_canvas.create_rectangle(
