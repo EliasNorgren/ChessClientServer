@@ -115,14 +115,17 @@ class server:
         finally:
             print("Closing connection")
             try:
-                ws1 = self.roomNumberToWebsocketTable[roomNumber][0]
-                ws2 = self.roomNumberToWebsocketTable[roomNumber][1]
-                del (self.websocketToRoomnumberTable[ws1])
-                del (self.websocketToRoomnumberTable[ws2])
+                if roomNumber in self.roomNumberToWebsocketTable:
+                    websocketsList = self.roomNumberToWebsocketTable[roomNumber]
+                    for ws in websocketsList:
+                        del (self.websocketToRoomnumberTable[ws])
+                    del self.roomNumberToWebsocketTable[roomNumber]
 
-                del (self.roomNumberToChessEngine[roomNumber])
-                del (self.whiteForRoom[roomNumber])
-                del (self.roomNumberToWebsocketTable[roomNumber])
+                if roomNumber in self.whiteForRoom:
+                    del self.whiteForRoom[roomNumber]
+                if roomNumber in self.roomNumberToChessEngine:
+                    del self.roomNumberToChessEngine[roomNumber]
+
             except KeyError:
                 pass
                 # self.clients.remove(websocket)

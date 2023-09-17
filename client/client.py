@@ -11,25 +11,18 @@ class Client:
 
         # white = True if sys.argv[1] == "white" else False
 
-        self.api = ServerAPI("localhost", "6060")
-        self.api.handleReceivedFEN = self.handleFEN
-        self.api.startConnection()
-        print("Waiting for connection to server")
-        if not self.api.connectedToServerEvent.wait(15):
-            print("Timeout when connected to server")
-            sys.exit(1)
-
         self.root = tk.Tk()
         self.roomNumberToGUI = {}
+        self.roomNumberToAPI = {}
         self.roomSelectorgui = RoomSelectorGUI()
         self.roomSelectorgui.joinOrCreateServer = self.joinOrCreateRoom
         self.roomSelectorgui.startGUI(self.root)
 
         self.root.mainloop()
 
-    def sendToServer(self, message):
+    def sendToServer(self, message, roomNumber):
         print("move " + message)
-        self.api.sendMessage("move " + message)
+        self.roomNumberToAPI[roomNumber].sendMessage("move " + message)
 
     def handleFEN(self, fen, roomNumber):
         self.roomNumberToGUI[roomNumber].renderFEN(fen)
@@ -38,15 +31,29 @@ class Client:
         roomNumber = textFromEntry.split(" ")[0]
         playingAs = textFromEntry.split(" ")[1]
 
-        self.api.sendMessage(f"create room {roomNumber} {playingAs}")
-        self.api.waitForMessage()
+        self.roomNumberToAPI[roomNumber] = ServerAPI("192.168.10.100", "6060")
+        self.roomNumberToAPI[roomNumber].handleReceivedFEN = self.handleFEN
+        self.roomNumberToAPI[roomNumber].startConnection()
+        print("Waiting for connection to server")
+        if not self.roomNumberToAPI[roomNumber].connectedToServerEvent.wait(15):
+            print("Timeout when connected to server")
+            sys.exit(1)
+
+        self.roomNumberToAPI[roomNumber].sendMessage(
+            f"create room {roomNumber} {playingAs}")
+        self.roomNumberToAPI[roomNumber].waitForMessage()
         self.roomNumberToGUI[roomNumber] = ChessGUI()
         self.roomNumberToGUI[roomNumber].sendToServer = self.sendToServer
+        self.roomNumberToGUI[roomNumber].closeChessWindow = self.closeAPIConnection
         renderAswhite = True if playingAs == "white" else False
         print(f"playingas={playingAs}, renderAsWhite={renderAswhite}")
 
         self.roomNumberToGUI[roomNumber].startChessGUI(
-            self.root, renderAswhite)
+            self.root, renderAswhite, roomNumber)
+
+    def closeAPIConnection(self, roomNumber):
+        print(f"Closing in client: {roomNumber}")
+        self.roomNumberToAPI[roomNumber].closeConnection()
 
 
 def main():

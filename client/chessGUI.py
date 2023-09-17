@@ -9,15 +9,17 @@ class ChessGUI:
     CHESSBOARD_HEIGHT = 8
     SQUARE_SIZE = 60  # Size of each square in pixels (adjust as needed)
 
-    def startChessGUI(self, root, renderAsWhite):
+    def startChessGUI(self, root, renderAsWhite, roomNumber):
         # Create the main application window
         self.renderAsWhite = renderAsWhite
-
+        self.roomNumber = roomNumber
         # self.root = tk.Tk()
-        window = tk.Toplevel(root)
-        window.title("Chess Client")
+        self.window = tk.Toplevel(root)
+        self.window.title("Chess Client")
+        self.window.protocol("WM_DELETE_WINDOW",
+                             self.closeConnectionAndDestroyWindo)
         self.selectedTile = None
-        self.chessboard_canvas = tk.Canvas(window, width=self.SQUARE_SIZE *
+        self.chessboard_canvas = tk.Canvas(self.window, width=self.SQUARE_SIZE *
                                            self.CHESSBOARD_WIDTH, height=self.SQUARE_SIZE * self.CHESSBOARD_HEIGHT)
         self.chessboard_canvas.bind("<Button-1>", self.canvasClick)
 
@@ -31,6 +33,10 @@ class ChessGUI:
         self.initBoard()
 
         # self.root.mainloop()
+
+    def closeConnectionAndDestroyWindo(self):
+        self.closeChessWindow(self.roomNumber)
+        self.window.destroy()
 
     def canvasClick(self, event):
         # print(f"Click: x:{event.x} y:{event.y}")
@@ -47,7 +53,7 @@ class ChessGUI:
                 self.chessboard_canvas.delete("highlight")
                 self.selectedTile = None
             else:
-                self.sendToServer(self.selectedTile+chessCord)
+                self.sendToServer(self.selectedTile+chessCord, self.roomNumber)
                 self.chessboard_canvas.delete("highlight")
                 self.selectedTile = None
 

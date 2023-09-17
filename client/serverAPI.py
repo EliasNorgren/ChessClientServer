@@ -59,3 +59,15 @@ class ServerAPI:
 
     def waitForMessage(self):
         self.waitForMessageEvent.wait()
+
+    async def closeWebSocket(self, ws):
+        if ws:
+            print(f"Closing room {self.roomNumber}")
+            await ws.close()
+            print("Room closed")
+
+    def closeConnection(self):
+        try:
+            asyncio.get_event_loop().run_until_complete(self.closeWebSocket(self.ws))
+        except Exception:
+            pass
