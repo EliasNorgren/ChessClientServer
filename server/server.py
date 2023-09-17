@@ -12,14 +12,13 @@ class server:
         self.roomNumberToChessEngine = {}
         self.whiteForRoom = {}
         start_server = websockets.serve(
-            self.handle_client_connection, "localhost", port)
+            self.handle_client_connection, "", port)
         asyncio.get_event_loop().run_until_complete(start_server)
         asyncio.get_event_loop().run_forever()
 
     async def handle_client_connection(self, websocket, path):
 
-        address, port, something1, something2 = websocket.remote_address
-        print(f"Incoming connection: {address} {port}")
+        print(f"Incoming connection: {websocket.remote_address}")
 
         # Receive room # ----- "create room x" or "join room x"
         message = await websocket.recv()

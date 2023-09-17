@@ -31,7 +31,7 @@ class Client:
         roomNumber = textFromEntry.split(" ")[0]
         playingAs = textFromEntry.split(" ")[1]
 
-        self.roomNumberToAPI[roomNumber] = ServerAPI("192.168.10.100", "6060")
+        self.roomNumberToAPI[roomNumber] = ServerAPI("localhost", "6060")
         self.roomNumberToAPI[roomNumber].handleReceivedFEN = self.handleFEN
         self.roomNumberToAPI[roomNumber].startConnection()
         print("Waiting for connection to server")
