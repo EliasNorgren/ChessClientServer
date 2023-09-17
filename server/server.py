@@ -63,7 +63,7 @@ class server:
 
                 if message[0] == "move":
 
-                    if len(self.websocketToRoomnumberTable[websocket]) < 2:
+                    if roomNumber not in self.roomNumberToChessEngine:
                         await websocket.send("game not started")
                         continue
 
